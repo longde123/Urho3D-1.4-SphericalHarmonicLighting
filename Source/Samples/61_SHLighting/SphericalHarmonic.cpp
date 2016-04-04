@@ -251,7 +251,7 @@ void SphericalHarmonic::CreateModelPolarCoeff(StaticModelData *pStaticModelData)
             // **from the SH lighting doc
             //return max(0, 5 * cos(theta) - 4) + max(0, -4 * sin(theta - M_PI) * cos(phi - 2.5) - 3);
 
-            // spherical coordinate eqn: sum <= 1.0 for unit sphere
+            // spherical cartesian eqn: 0 <= sum <= 1 for unit sphere
             return max( 0, s_X*cos( phi )*sin( theta ) + s_Y*sin( phi )*sin( theta ) + s_Z*cos( theta ) );
         }
     };
@@ -501,10 +501,10 @@ void SphericalHarmonic::SelfTransferDiffuseVertex(int modelIdx)
                                 TCoeffs &BshProjectedPolarCoeff = BstaticModelData.shProjectedPolarCoeff;
                                 Color BmaterialColor = BstaticModelData.materialColor * (1.0f/(float)M_PI);
                 
-                                IntVector3 tri = BlistTris[ result.triIndex_ ];
-                                Vector3 v0 = BlistVerts[ tri.x_ ];
-                                Vector3 v1 = BlistVerts[ tri.y_ ];
-                                Vector3 v2 = BlistVerts[ tri.z_ ];
+                                const IntVector3 &tri = BlistTris[ result.triIndex_ ];
+                                const Vector3 &v0 = BlistVerts[ tri.x_ ];
+                                const Vector3 &v1 = BlistVerts[ tri.y_ ];
+                                const Vector3 &v2 = BlistVerts[ tri.z_ ];
                 
                                 Vector3 bary = Barycentric( v0, v1, v2, result.position_ );
                 
@@ -516,9 +516,9 @@ void SphericalHarmonic::SelfTransferDiffuseVertex(int modelIdx)
                                 u = bary.x_;
                                 v = bary.y_;
                                 w = bary.z_;
-                                TCoeffs sc0 = BlistVertexShadowCoeff[ tri.x_ ];
-                                TCoeffs sc1 = BlistVertexShadowCoeff[ tri.y_ ];
-                                TCoeffs sc2 = BlistVertexShadowCoeff[ tri.z_ ];
+                                const TCoeffs &sc0 = BlistVertexShadowCoeff[ tri.x_ ];
+                                const TCoeffs &sc1 = BlistVertexShadowCoeff[ tri.y_ ];
+                                const TCoeffs &sc2 = BlistVertexShadowCoeff[ tri.z_ ];
                 
                                 //for(int k=0; k<3*kSH_Coeffs; ++k) 
                                 for(int k=0; k<kSH_Coeffs; ++k) 
@@ -613,15 +613,15 @@ bool SphericalHarmonic::RaytraceClosestTriangle(const Vector3 &pos, const Vector
 
     if ( x > y && x > z)
     {
-        dir = Vector3( vec.x_ * a, vec.y_ * b, vec.z_ * c );
+        dir = Vector3( vec.x_ * a, vec.y_ * b, vec.z_ * c ).Normalized();
     }
     else if ( y > x && y > z )
     {
-        dir = Vector3( vec.x_ * b, vec.y_ * a, vec.z_ * c );
+        dir = Vector3( vec.x_ * b, vec.y_ * a, vec.z_ * c ).Normalized();
     }
     else
     {
-        dir = Vector3( vec.x_ * b, vec.y_ * c, vec.z_ * a );
+        dir = Vector3( vec.x_ * b, vec.y_ * c, vec.z_ * a ).Normalized();
     }
     #else
     Vector3 dir = GetRandRayVector();
@@ -641,7 +641,7 @@ bool SphericalHarmonic::RaytraceClosestTriangle(const Vector3 &pos, const Vector
 //=============================================================================
 double SphericalHarmonic::Factorial(int index) const
 {
-    const double dFactorial[ kSH_Coeffs ] = 
+    const double dFactorial[ 16 ] = 
     {	
         1.0,             // 0
         1.0,             // 1
