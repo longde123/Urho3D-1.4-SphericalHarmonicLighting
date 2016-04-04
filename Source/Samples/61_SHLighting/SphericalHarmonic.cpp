@@ -101,7 +101,7 @@ void SphericalHarmonic::CreateSHSamples(int nsamples)
     int nsqrt = (int)sqrt( nsamples );
 
     // error checking
-    if ( nsamples < SH_MIN_SAMPLES || !IsPowerOfTwo( nsamples ) )
+    if ( nsamples < SH_MIN_SAMPLES || nsqrt*nsqrt != nsamples ) 
     {
         nsamples = SH_MIN_SAMPLES;
         nsqrt = (int)sqrt( SH_MIN_SAMPLES );
