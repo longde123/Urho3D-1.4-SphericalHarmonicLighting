@@ -44,7 +44,7 @@ using namespace Urho3D;
 //-------------------------------------
 // macros
 //-------------------------------------
-#define DEL_AND_NULL(x) if(x) delete x;
+#define DEL_AND_NULL(x) if(x) { delete x; x = NULL; }
 
 //-------------------------------------
 //-------------------------------------
@@ -149,12 +149,22 @@ struct StaticModelData
 //=============================================================================
 // misc funcs
 //=============================================================================
-inline float InvLerp(float a, float b, float t);
-inline float Angle2D(const Vector2& a, const Vector2& b);
 float AreaOfTriangle(const Vector3 &v0, const Vector3 &v1, const Vector3 &v2);
-// other misc funcs
 void ExtractFileDirAndName(const String &strFullPathFilename, String &strDir, String &strFilenameNoExt, char delimiter='-');
 
+//=============================================================================
+//=============================================================================
+inline float InvLerp(float a, float b, float t)
+{ 
+    return ( t - a )/( b - a ); 
+}
+
+//=============================================================================
+//=============================================================================
+inline float AngleBetweenVectors(const Vector2& a, const Vector2& b) 
+{ 
+    return Acos( a.DotProduct(b) / (a.Length() * b.Length() ) ); 
+}
 
 // barycentric for 3D and 2D
 //=============================================================================
