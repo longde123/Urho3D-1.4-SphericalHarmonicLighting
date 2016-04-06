@@ -34,6 +34,8 @@ class SphericalHarmonic : public Component
     OBJECT(SphericalHarmonic);
 
     typedef double (*SH_polar_fn)(double theta, double phi);
+    enum NLightType { kNLights_Max = 8 };
+
 public:
 
     static void RegisterObject(Context *context);
@@ -79,7 +81,11 @@ protected:
     Vector<double>       m_vSHCoeff;
 
     // static vars used for project functors
-    static double       s_X, s_Y, s_Z;
+    static double       s_X[kNLights_Max];
+    static double       s_Y[kNLights_Max];
+    static double       s_Z[kNLights_Max];
+    static double       s_Brightness[kNLights_Max];
+    static int          s_NLights;
 
     // random ray
     int                 m_iMaxRandRays;

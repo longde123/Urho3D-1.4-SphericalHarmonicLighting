@@ -65,9 +65,11 @@ double max(double a, double b) { return (a) > (b) ? (a) : (b); }
 //=============================================================================
 // static var for project polar fn
 //=============================================================================
-double SphericalHarmonic::s_X; 
-double SphericalHarmonic::s_Y;
-double SphericalHarmonic::s_Z;
+double SphericalHarmonic::s_X[kNLights_Max];
+double SphericalHarmonic::s_Y[kNLights_Max];
+double SphericalHarmonic::s_Z[kNLights_Max];
+double SphericalHarmonic::s_Brightness[kNLights_Max];
+int    SphericalHarmonic::s_NLights;
 
 //=============================================================================
 //=============================================================================
@@ -211,10 +213,60 @@ void SphericalHarmonic::SelfTransferSH()
 //=============================================================================
 void SphericalHarmonic::CreateModelPolarCoeff(StaticModelData *pStaticModelData)
 {
+    #ifdef MULTIPLE_LIGHTS_TEST
+    PODVector<Node*> listNode;
+    GetScene()->GetChildrenWithComponent( listNode, "Light", true);
+
+    s_NLights = listNode.Size() <= kNLights_Max ? listNode.Size() : kNLights_Max;
+
+    for ( unsigned i = 0; i < listNode.Size() && i < kNLights_Max; ++i )
+    {
+        Node *pLightNode = listNode[ i ];
+        Light *pLight = pLightNode->GetComponent<Light>();
+        Vector3 dirToLight(Vector3::UP);
+
+        // get dir to light
+        if ( pLight->GetLightType() == LIGHT_POINT )
+        {
+            dirToLight = ( pLightNode->GetPosition() - pStaticModelData->node->GetPosition() ).Normalized();
+        }
+        else if ( pLight->GetLightType() == LIGHT_DIRECTIONAL )
+        {
+            dirToLight = pLightNode->GetDirection() * -1.0f;
+        }
+
+        s_X[ i ] = (double)dirToLight.x_;
+        s_Y[ i ] = (double)dirToLight.y_;
+        s_Z[ i ] = (double)dirToLight.z_;
+
+        s_Brightness[ i ] = (double)pLight->GetBrightness();
+
+    }
+
+    struct ProjectFunc
+    {
+        static double PolarFnNLights(double theta, double phi)
+        {
+            double result = 0.0;
+
+            for ( int i = 0; i < s_NLights; ++i )
+            {
+                result += max( 0, s_Brightness[ i ] * s_X[i]*cos( phi )*sin( theta ) + s_Y[i]*sin( phi )*sin( theta ) + s_Z[i]*cos( theta ) );
+            }
+            return result;
+        }
+    };
+
     // init
     double dataCoeffResult[ kSH_Coeffs ];
     memset( dataCoeffResult, 0, sizeof(dataCoeffResult) );
 
+    // project
+    ProjectPolarFunction( ProjectFunc::PolarFnNLights, dataCoeffResult );
+
+    #else 
+    //-----------------------------------------------
+    //-----------------------------------------------
     // get light
     PODVector<Node*> listNode;
     GetScene()->GetChildrenWithComponent( listNode, "Light", true);
@@ -235,15 +287,15 @@ void SphericalHarmonic::CreateModelPolarCoeff(StaticModelData *pStaticModelData)
         dirToLight = pLightNode->GetDirection() * -1.0f;
     }
 
+    s_X[0] = (double)dirToLight.x_;
+    s_Y[0] = (double)dirToLight.y_;
+    s_Z[0] = (double)dirToLight.z_;
+
+    // sh project polar func
     // *** spherical-to-cartesian ***
     // x = cos(phi)*sin(theta)      phi = arctan( y/x )
     // y = sin(phi)*sin(theta)      theta = arctan( sqrt( x^2 + y^2 ) /z )
     // z = cos(theta)     
-    s_X = (double)dirToLight.x_;
-    s_Y = (double)dirToLight.y_;
-    s_Z = (double)dirToLight.z_;
-
-    // sh project polar func
     struct ProjectFunc
     {
         static double PolarFn(double theta, double phi)
@@ -252,12 +304,18 @@ void SphericalHarmonic::CreateModelPolarCoeff(StaticModelData *pStaticModelData)
             //return max(0, 5 * cos(theta) - 4) + max(0, -4 * sin(theta - M_PI) * cos(phi - 2.5) - 3);
 
             // spherical cartesian eqn: 0 <= sum <= 1 for unit sphere
-            return max( 0, s_X*cos( phi )*sin( theta ) + s_Y*sin( phi )*sin( theta ) + s_Z*cos( theta ) );
+            return max( 0, s_X[0]*cos( phi )*sin( theta ) + s_Y[0]*sin( phi )*sin( theta ) + s_Z[0]*cos( theta ) );
         }
     };
 
+    // init
+    double dataCoeffResult[ kSH_Coeffs ];
+    memset( dataCoeffResult, 0, sizeof(dataCoeffResult) );
+
     // project
     ProjectPolarFunction( ProjectFunc::PolarFn, dataCoeffResult );
+
+    #endif
 
     // **double to float
     for ( int i = 0; i < kSH_Coeffs; ++i )

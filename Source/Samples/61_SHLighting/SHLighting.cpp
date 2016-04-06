@@ -174,6 +174,22 @@ void RenderToTexture::CreateScene()
     plight->SetCastShadows( true );
     plight->SetBrightness( 1.0f );
 
+    #ifdef MULTIPLE_LIGHTS_TEST
+    // light2
+    if ( m_pSHFileUtil->GetParameters().usePointLightTest )
+    {
+        Node* plightNode2 = scene_->CreateChild("lightbulb");
+        Light* plight2 = plightNode2->CreateComponent<Light>();
+
+        plightNode2->SetPosition( Vector3(-1.0f, -5.0f, -1.0f) );
+        plight2->SetLightType( LIGHT_POINT );
+        plight2->SetRange( 5.0f );
+        plight2->SetColor(Color(1.0f, 1.0f, 1.0f));
+        plight2->SetCastShadows( true );
+        plight2->SetBrightness( 0.3f );
+    }
+    #endif
+
     //---------------------------------
     // scene static models
     //---------------------------------
@@ -455,6 +471,17 @@ void RenderToTexture::HandleUpdate(StringHash eventType, VariantMap& eventData)
         {
             SetupSH();
         }
+    }
+
+    // dbg render lights
+    PODVector<Node*> listNode;
+    scene_->GetChildrenWithComponent( listNode, "Light", true);
+
+    for ( unsigned i = 0; i < listNode.Size(); ++i )
+    {
+        Node *pLightNode = listNode[ i ];
+        Sphere sph( pLightNode->GetPosition(), 0.07f );
+        m_pDbgRenderer->AddSphere( sph, Color::WHITE );
     }
 }
 

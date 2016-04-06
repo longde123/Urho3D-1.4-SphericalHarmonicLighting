@@ -30,6 +30,8 @@
 #define SH_MIN_VCOLOR_VAL       0.3f
 #define SHORT_RAY_LENGTH        0.6f
 
+#define MULTIPLE_LIGHTS_TEST  // test n lights
+
 //=============================================================================
 // SHConfigParameter
 //=============================================================================
