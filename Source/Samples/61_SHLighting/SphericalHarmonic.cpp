@@ -251,7 +251,7 @@ void SphericalHarmonic::CreateModelPolarCoeff(StaticModelData *pStaticModelData)
 
             for ( int i = 0; i < s_NLights; ++i )
             {
-                result += max( 0, s_Brightness[ i ] * s_X[i]*cos( phi )*sin( theta ) + s_Y[i]*sin( phi )*sin( theta ) + s_Z[i]*cos( theta ) );
+                result += max( 0, s_Brightness[ i ] * ( s_X[i]*cos( phi )*sin( theta ) + s_Y[i]*sin( phi )*sin( theta ) + s_Z[i]*cos( theta ) ) );
             }
             return result;
         }
